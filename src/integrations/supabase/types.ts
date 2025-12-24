@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pricing_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_label: string | null
+          discount_percentage: number | null
+          features: string[]
+          id: string
+          is_popular: boolean
+          name: string
+          period: string
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_label?: string | null
+          discount_percentage?: number | null
+          features?: string[]
+          id?: string
+          is_popular?: boolean
+          name: string
+          period?: string
+          price: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_label?: string | null
+          discount_percentage?: number | null
+          features?: string[]
+          id?: string
+          is_popular?: boolean
+          name?: string
+          period?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
