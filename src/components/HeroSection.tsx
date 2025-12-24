@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Rocket, Users, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getWhatsAppUrl } from '@/lib/whatsapp';
 
 const stats = [
   { icon: Rocket, value: 150, suffix: '+', label: 'Project Selesai' },
@@ -75,14 +76,17 @@ const HeroSection = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-up"
             style={{ animationDelay: '0.3s' }}
           >
-            <Button variant="hero" size="lg">
-              Konsultasi via WhatsApp
-            </Button>
-            <Button variant="heroOutline" size="lg">
-              Lihat Portofolio
-            </Button>
+            <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
+              <Button variant="hero" size="lg">
+                Konsultasi via WhatsApp
+              </Button>
+            </a>
+            <a href="#portofolio">
+              <Button variant="heroOutline" size="lg">
+                Lihat Portofolio
+              </Button>
+            </a>
           </div>
-
           {/* Stats */}
           <div 
             className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto animate-fade-up"

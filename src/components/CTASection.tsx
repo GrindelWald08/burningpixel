@@ -1,5 +1,6 @@
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getWhatsAppUrl } from '@/lib/whatsapp';
 
 const CTASection = () => {
   return (
@@ -29,10 +30,12 @@ const CTASection = () => {
           </p>
 
           {/* CTA Button */}
-          <Button variant="cta" size="xl" className="animate-pulse-glow">
-            <MessageCircle className="w-5 h-5" />
-            Hubungi Kami Sekarang
-          </Button>
+          <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
+            <Button variant="cta" size="xl" className="animate-pulse-glow">
+              <MessageCircle className="w-5 h-5" />
+              Hubungi Kami Sekarang
+            </Button>
+          </a>
 
           {/* Trust Indicators */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-muted-foreground text-sm">

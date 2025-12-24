@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getWhatsAppUrl } from '@/lib/whatsapp';
 
 const navLinks = [
   { href: '#home', label: 'Home' },
@@ -47,11 +48,12 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* CTA Button */}
         <div className="hidden md:block">
-          <Button variant="hero" size="default">
-            Konsultasi WA
-          </Button>
+          <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
+            <Button variant="hero" size="default">
+              Konsultasi WA
+            </Button>
+          </a>
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -77,9 +79,11 @@ const Navbar = () => {
                 {link.label}
               </a>
             ))}
-            <Button variant="hero" size="default" className="mt-2">
-              Konsultasi WA
-            </Button>
+            <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
+              <Button variant="hero" size="default" className="mt-2 w-full">
+                Konsultasi WA
+              </Button>
+            </a>
           </div>
         </div>
       )}
