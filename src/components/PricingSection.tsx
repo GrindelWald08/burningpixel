@@ -100,7 +100,7 @@ const PricingSection = () => {
 
                     {/* Discount Badge */}
                     {plan.discount_percentage > 0 && (
-                      <div className={`absolute right-4 ${plan.is_popular ? 'top-3' : '-top-4'}`}>
+                      <div className="absolute right-4 top-3">
                         <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
                           <Percent className="w-3 h-3" />
                           {plan.discount_percentage}% OFF
