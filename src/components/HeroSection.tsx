@@ -2,13 +2,20 @@ import { useEffect, useState } from 'react';
 import { Rocket, Users, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const rotatingTexts = [
+  'Website Company Profile',
+  'Landing Page',
+  'Website Tour & Travel',
+  'Website Rental',
+];
 
 const stats = [
   { icon: Rocket, value: 150, suffix: '+', label: 'Project Selesai' },
   { icon: Users, value: 120, suffix: '+', label: 'Client Puas' },
   { icon: Clock, value: 99, suffix: '%', label: 'Tepat Waktu' },
 ];
-
 const CounterAnimation = ({ target, suffix }: { target: number; suffix: string }) => {
   const [count, setCount] = useState(0);
 
@@ -39,6 +46,15 @@ const CounterAnimation = ({ target, suffix }: { target: number; suffix: string }
 };
 
 const HeroSection = () => {
+  const [textIndex, setTextIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTextIndex((prev) => (prev + 1) % rotatingTexts.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section id="home" className="min-h-screen flex flex-col justify-center pt-20 relative overflow-hidden">
       {/* Background Effects */}
@@ -51,7 +67,20 @@ const HeroSection = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-fade-up">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-sm text-foreground/80">Jasa Pembuatan Website Profesional</span>
+            <span className="text-sm text-foreground/80 relative h-5 overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={textIndex}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -20, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="block"
+                >
+                  {rotatingTexts[textIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </div>
 
           {/* Headline */}
