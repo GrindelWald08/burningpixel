@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Check, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ScrollReveal from './ScrollReveal';
+import { getWhatsAppUrl } from '@/lib/whatsapp';
 
 const categories = [
   { id: 'landing', label: 'Landing Page' },
@@ -99,88 +101,95 @@ const PricingSection = () => {
 
       <div className="container relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <span className="text-primary text-sm font-semibold tracking-wider uppercase mb-4 block">
-            Investasi
-          </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-            Pricelist <span className="text-gradient">Layanan</span>
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Pilih paket yang sesuai dengan kebutuhan dan budget bisnis Anda.
-          </p>
-        </div>
+        <ScrollReveal>
+          <div className="text-center mb-12">
+            <span className="text-primary text-sm font-semibold tracking-wider uppercase mb-4 block">
+              Investasi
+            </span>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+              Pricelist <span className="text-gradient">Layanan</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              Pilih paket yang sesuai dengan kebutuhan dan budget bisnis Anda.
+            </p>
+          </div>
+        </ScrollReveal>
 
         {/* Category Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
-                activeCategory === category.id
-                  ? 'bg-primary text-primary-foreground shadow-[0_0_20px_hsl(166_85%_63%/0.4)]'
-                  : 'glass text-foreground hover:bg-primary/10'
-              }`}
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
+        <ScrollReveal delay={0.1}>
+          <div className="flex flex-wrap justify-center gap-2 mb-12">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveCategory(category.id)}
+                className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
+                  activeCategory === category.id
+                    ? 'bg-primary text-primary-foreground shadow-[0_0_20px_hsl(166_85%_63%/0.4)]'
+                    : 'glass text-foreground hover:bg-primary/10'
+                }`}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+        </ScrollReveal>
 
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {pricingData[activeCategory].map((plan, index) => (
-            <div
-              key={index}
-              className={`relative p-8 rounded-2xl transition-all duration-500 ${
-                plan.popular
-                  ? 'bg-card border-2 border-primary shadow-[0_0_40px_hsl(166_85%_63%/0.2)] scale-105 z-10'
-                  : 'bg-card border border-border hover:border-primary/30'
-              }`}
-            >
-              {/* Popular Badge */}
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <div className="flex items-center gap-1 px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">
-                    <Star className="w-3 h-3 fill-current" />
-                    BEST SELLER
-                  </div>
-                </div>
-              )}
-
-              {/* Plan Name */}
-              <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
-
-              {/* Price */}
-              <div className="mb-6">
-                <span className={`text-3xl font-bold ${plan.popular ? 'text-primary' : 'text-foreground'}`}>
-                  {plan.price}
-                </span>
-              </div>
-
-              {/* Features */}
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start gap-3">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                      plan.popular ? 'bg-primary/20' : 'bg-muted'
-                    }`}>
-                      <Check className={`w-3 h-3 ${plan.popular ? 'text-primary' : 'text-muted-foreground'}`} />
-                    </div>
-                    <span className="text-muted-foreground text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA Button */}
-              <Button
-                variant={plan.popular ? 'hero' : 'outline'}
-                className="w-full"
+            <ScrollReveal key={index} delay={0.15 + index * 0.1}>
+              <div
+                className={`relative p-8 rounded-2xl transition-all duration-500 h-full ${
+                  plan.popular
+                    ? 'bg-card border-2 border-primary shadow-[0_0_40px_hsl(166_85%_63%/0.2)] scale-105 z-10'
+                    : 'bg-card border border-border hover:border-primary/30'
+                }`}
               >
-                Pilih Paket
-              </Button>
-            </div>
+                {/* Popular Badge */}
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <div className="flex items-center gap-1 px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                      <Star className="w-3 h-3 fill-current" />
+                      BEST SELLER
+                    </div>
+                  </div>
+                )}
+
+                {/* Plan Name */}
+                <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
+
+                {/* Price */}
+                <div className="mb-6">
+                  <span className={`text-3xl font-bold ${plan.popular ? 'text-primary' : 'text-foreground'}`}>
+                    {plan.price}
+                  </span>
+                </div>
+
+                {/* Features */}
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                        plan.popular ? 'bg-primary/20' : 'bg-muted'
+                      }`}>
+                        <Check className={`w-3 h-3 ${plan.popular ? 'text-primary' : 'text-muted-foreground'}`} />
+                      </div>
+                      <span className="text-muted-foreground text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA Button */}
+                <a href={getWhatsAppUrl(`Halo, saya tertarik dengan paket ${plan.name} untuk ${activeCategory}. Bisa dibantu?`)} target="_blank" rel="noopener noreferrer">
+                  <Button
+                    variant={plan.popular ? 'hero' : 'outline'}
+                    className="w-full"
+                  >
+                    Pilih Paket
+                  </Button>
+                </a>
+              </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
