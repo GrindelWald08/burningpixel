@@ -58,9 +58,8 @@ const HeroSection = () => {
             className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground leading-tight mb-6 animate-fade-up"
             style={{ animationDelay: '0.1s' }}
           >
-            Bantu Bisnis Kamu{' '}
-            <span className="text-gradient">Jualan Online</span>{' '}
-            Lewat Website.
+            Bantu Bisnis Kamu Berkembang Dengan{' '}
+            <span className="text-gradient">Website Profesional</span>
           </h1>
 
           {/* Sub-headline */}
