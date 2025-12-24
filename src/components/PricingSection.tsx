@@ -1,98 +1,15 @@
-import { useState } from 'react';
-import { Check, Star } from 'lucide-react';
+import { Check, Star, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ScrollReveal from './ScrollReveal';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
+import { usePricingPackages } from '@/hooks/usePricingPackages';
 
-const categories = [
-  { id: 'landing', label: 'Landing Page' },
-  { id: 'company', label: 'Company Profile' },
-  { id: 'toko', label: 'Toko Online' },
-  { id: 'seo', label: 'SEO' },
-];
-
-const pricingData: Record<string, Array<{
-  name: string;
-  price: string;
-  popular?: boolean;
-  features: string[];
-}>> = {
-  landing: [
-    {
-      name: 'Basic',
-      price: 'Rp 1.500.000',
-      features: ['Free Domain .com', 'Hosting 3 Bulan', '1 Halaman', '1x Revisi', 'Mobile Responsive'],
-    },
-    {
-      name: 'Professional',
-      price: 'Rp 2.500.000',
-      popular: true,
-      features: ['Free Domain .com', 'Hosting 6 Bulan', '1 Halaman Extended', '3x Revisi', 'Mobile Responsive', 'SEO Basic', 'Copywriting'],
-    },
-    {
-      name: 'Premium',
-      price: 'Rp 4.000.000',
-      features: ['Free Domain .com', 'Hosting 1 Tahun', 'Multi Section', 'Unlimited Revisi', 'Mobile Responsive', 'SEO Advanced', 'Copywriting', 'Speed Optimization'],
-    },
-  ],
-  company: [
-    {
-      name: 'Starter',
-      price: 'Rp 2.500.000',
-      features: ['Free Domain .com', 'Hosting 6 Bulan', '3 Halaman', '2x Revisi', 'Mobile Responsive'],
-    },
-    {
-      name: 'Growth',
-      price: 'Rp 4.000.000',
-      popular: true,
-      features: ['Free Domain .com', 'Hosting 1 Tahun', '5-6 Halaman', '5x Revisi', 'Desain Premium', 'SEO Basic', 'Copywriting'],
-    },
-    {
-      name: 'Executive',
-      price: 'Rp 6.500.000',
-      features: ['Free Domain .com', 'Hosting 1 Tahun', '8-10 Halaman', 'Unlimited Revisi', 'Fitur Khusus', 'Speed Optimization', 'SEO Advanced', 'Priority Support'],
-    },
-  ],
-  toko: [
-    {
-      name: 'Starter',
-      price: 'Rp 3.500.000',
-      features: ['Free Domain .com', 'Hosting 6 Bulan', '50 Produk', 'Payment Gateway', 'Mobile Responsive'],
-    },
-    {
-      name: 'Business',
-      price: 'Rp 5.500.000',
-      popular: true,
-      features: ['Free Domain .com', 'Hosting 1 Tahun', '200 Produk', 'Multi Payment', 'Mobile Responsive', 'SEO Basic', 'Inventory System'],
-    },
-    {
-      name: 'Enterprise',
-      price: 'Rp 8.500.000',
-      features: ['Free Domain .com', 'Hosting 1 Tahun', 'Unlimited Produk', 'Multi Payment', 'Advanced Features', 'SEO Advanced', 'Priority Support', 'Custom Integration'],
-    },
-  ],
-  seo: [
-    {
-      name: 'Basic',
-      price: 'Rp 1.000.000/bln',
-      features: ['5 Keywords', 'On-Page SEO', 'Monthly Report', '1 Blog Post'],
-    },
-    {
-      name: 'Professional',
-      price: 'Rp 2.500.000/bln',
-      popular: true,
-      features: ['15 Keywords', 'On-Page SEO', 'Off-Page SEO', 'Weekly Report', '4 Blog Posts', 'Backlink Building'],
-    },
-    {
-      name: 'Agency',
-      price: 'Rp 5.000.000/bln',
-      features: ['30+ Keywords', 'Full SEO Package', 'Daily Monitoring', '8 Blog Posts', 'Premium Backlinks', 'Competitor Analysis', 'Dedicated Manager'],
-    },
-  ],
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('id-ID').format(price);
 };
 
 const PricingSection = () => {
-  const [activeCategory, setActiveCategory] = useState('company');
+  const { data: packages, isLoading } = usePricingPackages();
 
   return (
     <section id="harga" className="py-24 relative">
@@ -115,83 +32,108 @@ const PricingSection = () => {
           </div>
         </ScrollReveal>
 
-        {/* Category Tabs */}
-        <ScrollReveal delay={0.1}>
-          <div className="flex flex-wrap justify-center gap-2 mb-12">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
-                className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
-                  activeCategory === category.id
-                    ? 'bg-primary text-primary-foreground shadow-[0_0_20px_hsl(166_85%_63%/0.4)]'
-                    : 'glass text-foreground hover:bg-primary/10'
-                }`}
-              >
-                {category.label}
-              </button>
-            ))}
-          </div>
-        </ScrollReveal>
-
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {pricingData[activeCategory].map((plan, index) => (
-            <ScrollReveal key={index} delay={0.15 + index * 0.1}>
-              <div
-                className={`relative p-8 rounded-2xl transition-all duration-500 h-full ${
-                  plan.popular
-                    ? 'bg-card border-2 border-primary shadow-[0_0_40px_hsl(166_85%_63%/0.2)] scale-105 z-10'
-                    : 'bg-card border border-border hover:border-primary/30'
-                }`}
-              >
-                {/* Popular Badge */}
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <div className="flex items-center gap-1 px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">
-                      <Star className="w-3 h-3 fill-current" />
-                      BEST SELLER
-                    </div>
-                  </div>
-                )}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
+          </div>
+        ) : packages && packages.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {packages.map((plan, index) => {
+              const discountedPrice = plan.discount_percentage > 0
+                ? plan.price * (1 - plan.discount_percentage / 100)
+                : plan.price;
 
-                {/* Plan Name */}
-                <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
-
-                {/* Price */}
-                <div className="mb-6">
-                  <span className={`text-3xl font-bold ${plan.popular ? 'text-primary' : 'text-foreground'}`}>
-                    {plan.price}
-                  </span>
-                </div>
-
-                {/* Features */}
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start gap-3">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                        plan.popular ? 'bg-primary/20' : 'bg-muted'
-                      }`}>
-                        <Check className={`w-3 h-3 ${plan.popular ? 'text-primary' : 'text-muted-foreground'}`} />
-                      </div>
-                      <span className="text-muted-foreground text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* CTA Button */}
-                <a href={getWhatsAppUrl(`Halo, saya tertarik dengan paket ${plan.name} untuk ${activeCategory}. Bisa dibantu?`)} target="_blank" rel="noopener noreferrer">
-                  <Button
-                    variant={plan.popular ? 'hero' : 'outline'}
-                    className="w-full"
+              return (
+                <ScrollReveal key={plan.id} delay={0.15 + index * 0.1}>
+                  <div
+                    className={`relative p-8 rounded-2xl transition-all duration-500 h-full ${
+                      plan.is_popular
+                        ? 'bg-card border-2 border-primary shadow-[0_0_40px_hsl(166_85%_63%/0.2)] scale-105 z-10'
+                        : 'bg-card border border-border hover:border-primary/30'
+                    }`}
                   >
-                    Pilih Paket
-                  </Button>
-                </a>
-              </div>
-            </ScrollReveal>
-          ))}
-        </div>
+                    {/* Popular Badge */}
+                    {plan.is_popular && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                        <div className="flex items-center gap-1 px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                          <Star className="w-3 h-3 fill-current" />
+                          BEST SELLER
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Discount Badge */}
+                    {plan.discount_percentage > 0 && (
+                      <div className="absolute -top-4 right-4">
+                        <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
+                          <Percent className="w-3 h-3" />
+                          {plan.discount_percentage}% OFF
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Plan Name */}
+                    <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
+                    
+                    {/* Description */}
+                    {plan.description && (
+                      <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                    )}
+
+                    {/* Price */}
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-2">
+                        <span className={`text-3xl font-bold ${plan.is_popular ? 'text-primary' : 'text-foreground'}`}>
+                          Rp {formatPrice(discountedPrice)}
+                        </span>
+                        <span className="text-muted-foreground text-sm">{plan.period}</span>
+                      </div>
+                      {plan.discount_percentage > 0 && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-muted-foreground line-through text-sm">
+                            Rp {formatPrice(plan.price)}
+                          </span>
+                          {plan.discount_label && (
+                            <span className="text-xs text-destructive font-medium">{plan.discount_label}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Features */}
+                    <ul className="space-y-3 mb-8">
+                      {plan.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-start gap-3">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                            plan.is_popular ? 'bg-primary/20' : 'bg-muted'
+                          }`}>
+                            <Check className={`w-3 h-3 ${plan.is_popular ? 'text-primary' : 'text-muted-foreground'}`} />
+                          </div>
+                          <span className="text-muted-foreground text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* CTA Button */}
+                    <a href={getWhatsAppUrl(`Halo, saya tertarik dengan paket ${plan.name}. Bisa dibantu?`)} target="_blank" rel="noopener noreferrer">
+                      <Button
+                        variant={plan.is_popular ? 'hero' : 'outline'}
+                        className="w-full"
+                      >
+                        Pilih Paket
+                      </Button>
+                    </a>
+                  </div>
+                </ScrollReveal>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-muted-foreground">
+            No pricing packages available
+          </div>
+        )}
       </div>
     </section>
   );
