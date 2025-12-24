@@ -11,7 +11,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="md:col-span-2">
             <a href="#home" className="text-2xl font-bold text-primary mb-4 block">
-              Yogz Creative
+              Burning Pixel
             </a>
             <p className="text-muted-foreground mb-6 max-w-md">
               Jasa pembuatan website profesional untuk membantu bisnis Anda berkembang di dunia digital. Dari landing page hingga toko online.
@@ -57,7 +57,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3 text-muted-foreground">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>hello@yogzcreative.com</span>
+                <span>hello@burningpixel.com</span>
               </li>
               <li className="flex items-start gap-3 text-muted-foreground">
                 <MapPin className="w-4 h-4 text-primary mt-1" />
@@ -71,7 +71,7 @@ const Footer = () => {
         <div className="border-t border-border pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-muted-foreground text-sm">
-              © 2025 Yogz Creative. All rights reserved.
+              © 2025 Burning Pixel. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
