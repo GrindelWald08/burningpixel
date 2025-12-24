@@ -31,7 +31,7 @@ const Navbar = () => {
       <div className="container flex items-center justify-between">
         {/* Logo */}
         <a href="#home" className="text-2xl font-bold text-primary">
-          Yogz Creative
+          Burning Pixel
         </a>
 
         {/* Desktop Navigation */}

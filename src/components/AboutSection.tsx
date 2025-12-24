@@ -31,7 +31,7 @@ const AboutSection = () => {
             Mengapa Kami?
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-            Kenapa Harus <span className="text-gradient">Yogz Creative</span>?
+            Kenapa Harus <span className="text-gradient">Burning Pixel</span>?
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
             Kami tidak hanya membuat website, tapi membantu bisnis Anda berkembang di dunia digital.
