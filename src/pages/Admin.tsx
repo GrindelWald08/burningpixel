@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon, Shield } from 'lucide-react';
+import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon, Shield, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminLogin from '@/components/admin/AdminLogin';
@@ -8,6 +8,7 @@ import PricingEditor from '@/components/admin/PricingEditor';
 import AddPackageForm from '@/components/admin/AddPackageForm';
 import PortfolioEditor from '@/components/admin/PortfolioEditor';
 import AddPortfolioForm from '@/components/admin/AddPortfolioForm';
+import UserManagement from '@/components/admin/UserManagement';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
@@ -78,7 +79,7 @@ const Admin = () => {
       <main className="container py-8">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="pricing" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="pricing" className="flex items-center gap-2">
                 <Package className="w-4 h-4" />
                 Pricing
@@ -86,6 +87,10 @@ const Admin = () => {
               <TabsTrigger value="portfolio" className="flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" />
                 Portfolio
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Users
               </TabsTrigger>
             </TabsList>
 
@@ -201,6 +206,23 @@ const Admin = () => {
                   </Button>
                 </div>
               )}
+            </TabsContent>
+
+            {/* Users Tab */}
+            <TabsContent value="users">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">User Management</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Manage user roles and permissions
+                  </p>
+                </div>
+              </div>
+
+              <UserManagement />
             </TabsContent>
           </Tabs>
         </div>
