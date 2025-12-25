@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Lock, Eye, EyeOff, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -79,6 +80,24 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
               {isLoading ? 'Verifying...' : 'Login'}
             </Button>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            <Link to="/auth">
+              <Button variant="outline" className="w-full mt-4">
+                <User className="w-4 h-4 mr-2" />
+                Login with Account
+              </Button>
+            </Link>
+          </div>
 
           <p className="text-xs text-muted-foreground text-center mt-6">
             This area is protected. Unauthorized access is prohibited.
