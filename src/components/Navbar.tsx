@@ -50,12 +50,12 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link to="/auth">
-            <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/auth">
               <LogIn className="w-4 h-4 mr-2" />
               Login
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
             <Button variant="hero" size="default">
               Konsultasi WA
@@ -86,12 +86,12 @@ const Navbar = () => {
                 {link.label}
               </a>
             ))}
-            <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-              <Button variant="outline" size="default" className="w-full">
+            <Button variant="outline" size="default" className="w-full" asChild>
+              <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
                 <LogIn className="w-4 h-4 mr-2" />
                 Login
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
               <Button variant="hero" size="default" className="w-full">
                 Konsultasi WA
