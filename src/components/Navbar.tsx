@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, LogIn } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
 
 const navLinks = [
@@ -50,12 +50,13 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/auth">
-              <LogIn className="w-4 h-4 mr-2" />
-              Login
-            </Link>
-          </Button>
+          <Link
+            to="/auth"
+            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+          >
+            <LogIn className="w-4 h-4 mr-2" />
+            Login
+          </Link>
           <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
             <Button variant="hero" size="default">
               Konsultasi WA
@@ -86,12 +87,18 @@ const Navbar = () => {
                 {link.label}
               </a>
             ))}
-            <Button variant="outline" size="default" className="w-full" asChild>
-              <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                <LogIn className="w-4 h-4 mr-2" />
-                Login
-              </Link>
-            </Button>
+            <Link
+              to="/auth"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={buttonVariants({
+                variant: 'outline',
+                size: 'default',
+                className: 'w-full',
+              })}
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Login
+            </Link>
             <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
               <Button variant="hero" size="default" className="w-full">
                 Konsultasi WA
