@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon, Shield, Users } from 'lucide-react';
+import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon, Shield, Users, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminLogin from '@/components/admin/AdminLogin';
@@ -9,6 +9,7 @@ import AddPackageForm from '@/components/admin/AddPackageForm';
 import PortfolioEditor from '@/components/admin/PortfolioEditor';
 import AddPortfolioForm from '@/components/admin/AddPortfolioForm';
 import UserManagement from '@/components/admin/UserManagement';
+import { InvitationManager } from '@/components/admin/InvitationManager';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
@@ -79,7 +80,7 @@ const Admin = () => {
       <main className="container py-8">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="pricing" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="pricing" className="flex items-center gap-2">
                 <Package className="w-4 h-4" />
                 Pricing
@@ -91,6 +92,10 @@ const Admin = () => {
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 Users
+              </TabsTrigger>
+              <TabsTrigger value="invitations" className="flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Invitations
               </TabsTrigger>
             </TabsList>
 
@@ -223,6 +228,23 @@ const Admin = () => {
               </div>
 
               <UserManagement />
+            </TabsContent>
+
+            {/* Invitations Tab */}
+            <TabsContent value="invitations">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">Email Invitations</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Invite new users via email
+                  </p>
+                </div>
+              </div>
+
+              <InvitationManager />
             </TabsContent>
           </Tabs>
         </div>
