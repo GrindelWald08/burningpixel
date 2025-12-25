@@ -58,9 +58,9 @@ const HeroSection = () => {
   return (
     <section id="home" className="min-h-screen flex flex-col justify-center pt-20 relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(166_85%_63%/0.08)_0%,_transparent_50%)]" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_hsl(166_85%_63%/0.08)_0%,_transparent_50%)]" />
+      <div className="absolute top-1/4 left-1/4 pointer-events-none w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-1/4 right-1/4 pointer-events-none w-80 h-80 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
 
       <div className="container relative z-10">
         <div className="max-w-4xl mx-auto text-center">
