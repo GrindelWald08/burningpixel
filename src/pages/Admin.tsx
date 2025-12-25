@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminLogin from '@/components/admin/AdminLogin';
@@ -9,17 +9,30 @@ import AddPackageForm from '@/components/admin/AddPackageForm';
 import PortfolioEditor from '@/components/admin/PortfolioEditor';
 import AddPortfolioForm from '@/components/admin/AddPortfolioForm';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { useAuth } from '@/hooks/useAuth';
 import { usePricingPackages } from '@/hooks/usePricingPackages';
 import { useAllPortfolioItems } from '@/hooks/usePortfolioItems';
 
 const Admin = () => {
-  const { isAuthenticated, isLoading: authLoading, login, logout } = useAdminAuth();
+  const { isAuthenticated: isPasswordAuth, isLoading: passwordAuthLoading, login, logout: passwordLogout } = useAdminAuth();
+  const { isAdmin, isLoading: roleLoading, user } = useAdminRole();
+  const { signOut } = useAuth();
   const { data: packages, isLoading: packagesLoading, refetch: refetchPackages } = usePricingPackages();
   const { data: portfolioItems, isLoading: portfolioLoading, refetch: refetchPortfolio } = useAllPortfolioItems();
   const [showAddPackageForm, setShowAddPackageForm] = useState(false);
   const [showAddPortfolioForm, setShowAddPortfolioForm] = useState(false);
 
-  if (authLoading) {
+  // Check if user is authenticated either by password or by role
+  const isAuthenticated = isPasswordAuth || isAdmin;
+  const isLoading = passwordAuthLoading || roleLoading;
+
+  const handleLogout = async () => {
+    passwordLogout();
+    await signOut();
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
@@ -46,8 +59,14 @@ const Admin = () => {
               </Link>
               <div className="h-6 w-px bg-border" />
               <h1 className="text-xl font-bold text-foreground">Admin Dashboard</h1>
+              {isAdmin && user && (
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
+                  <Shield className="w-3 h-3" />
+                  {user.email}
+                </div>
+              )}
             </div>
-            <Button variant="outline" size="sm" onClick={logout}>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>
