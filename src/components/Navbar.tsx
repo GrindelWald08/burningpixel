@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Menu, X, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
 
@@ -48,7 +49,13 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-3">
+          <Link to="/auth">
+            <Button variant="outline" size="sm">
+              <LogIn className="w-4 h-4 mr-2" />
+              Login
+            </Button>
+          </Link>
           <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
             <Button variant="hero" size="default">
               Konsultasi WA
@@ -79,8 +86,14 @@ const Navbar = () => {
                 {link.label}
               </a>
             ))}
+            <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+              <Button variant="outline" size="default" className="w-full">
+                <LogIn className="w-4 h-4 mr-2" />
+                Login
+              </Button>
+            </Link>
             <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
-              <Button variant="hero" size="default" className="mt-2 w-full">
+              <Button variant="hero" size="default" className="w-full">
                 Konsultasi WA
               </Button>
             </a>
