@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, User, Lock, Mail, Shield, Save, Eye, EyeOff } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { logActivity } from '@/hooks/useActivityLogs';
 
 const Account = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -75,6 +76,8 @@ const Account = () => {
 
       if (error) throw error;
 
+      await logActivity('profile_update', 'Updated profile information');
+
       toast({
         title: 'Profile updated',
         description: 'Your profile has been updated successfully.',
@@ -119,6 +122,8 @@ const Account = () => {
       });
 
       if (error) throw error;
+
+      await logActivity('password_change', 'Changed account password');
 
       toast({
         title: 'Password changed',

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { logActivity } from '@/hooks/useActivityLogs';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -112,6 +112,7 @@ const Auth = () => {
             });
           }
         } else {
+          await logActivity('login', 'User logged in');
           toast({
             title: 'Welcome back!',
             description: 'You have successfully logged in',
@@ -147,6 +148,7 @@ const Auth = () => {
             });
           }
         } else {
+          await logActivity('signup', 'New user registered');
           toast({
             title: 'Account created!',
             description: 'You have successfully signed up',
