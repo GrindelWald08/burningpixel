@@ -1,8 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, LogIn } from 'lucide-react';
+import { Menu, X, LogIn, User, Settings, LogOut, Shield } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navLinks = [
   { href: '#home', label: 'Home' },
@@ -15,6 +24,10 @@ const navLinks = [
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isLoading: authLoading, signOut } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+
+  const isLoading = authLoading || adminLoading;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +36,11 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <nav
@@ -50,13 +68,56 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            to="/auth"
-            className={buttonVariants({ variant: 'outline', size: 'sm' })}
-          >
-            <LogIn className="w-4 h-4 mr-2" />
-            Login
-          </Link>
+          {isLoading ? (
+            <div className="w-24 h-9 rounded-md bg-muted/50 animate-pulse" />
+          ) : user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <User className="w-4 h-4 mr-2" />
+                  Account
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium truncate">{user.email}</p>
+                  {isAdmin && (
+                    <p className="text-xs text-primary flex items-center gap-1 mt-0.5">
+                      <Shield className="w-3 h-3" /> Admin
+                    </p>
+                  )}
+                </div>
+                <DropdownMenuSeparator />
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="cursor-pointer">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Admin Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem asChild>
+                  <Link to="/auth" className="cursor-pointer">
+                    <User className="w-4 h-4 mr-2" />
+                    My Account
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link
+              to="/auth"
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Login
+            </Link>
+          )}
           <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
             <Button variant="hero" size="default">
               Konsultasi WA
@@ -87,18 +148,70 @@ const Navbar = () => {
                 {link.label}
               </a>
             ))}
-            <Link
-              to="/auth"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={buttonVariants({
-                variant: 'outline',
-                size: 'default',
-                className: 'w-full',
-              })}
-            >
-              <LogIn className="w-4 h-4 mr-2" />
-              Login
-            </Link>
+
+            {isLoading ? (
+              <div className="w-full h-10 rounded-md bg-muted/50 animate-pulse" />
+            ) : user ? (
+              <>
+                <div className="py-2 px-1 border-t border-border">
+                  <p className="text-sm font-medium truncate">{user.email}</p>
+                  {isAdmin && (
+                    <p className="text-xs text-primary flex items-center gap-1 mt-0.5">
+                      <Shield className="w-3 h-3" /> Admin
+                    </p>
+                  )}
+                </div>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={buttonVariants({
+                      variant: 'outline',
+                      size: 'default',
+                      className: 'w-full',
+                    })}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Admin Dashboard
+                  </Link>
+                )}
+                <Link
+                  to="/auth"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={buttonVariants({
+                    variant: 'outline',
+                    size: 'default',
+                    className: 'w-full',
+                  })}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  My Account
+                </Link>
+                <Button
+                  variant="destructive"
+                  size="default"
+                  className="w-full"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Link
+                to="/auth"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={buttonVariants({
+                  variant: 'outline',
+                  size: 'default',
+                  className: 'w-full',
+                })}
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Login
+              </Link>
+            )}
+
             <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
               <Button variant="hero" size="default" className="w-full">
                 Konsultasi WA
