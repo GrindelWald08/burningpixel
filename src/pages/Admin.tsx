@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon, Shield, Users, Mail } from 'lucide-react';
+import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon, Shield, Users, Mail, BarChart3, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminLogin from '@/components/admin/AdminLogin';
@@ -10,6 +10,8 @@ import PortfolioEditor from '@/components/admin/PortfolioEditor';
 import AddPortfolioForm from '@/components/admin/AddPortfolioForm';
 import UserManagement from '@/components/admin/UserManagement';
 import { InvitationManager } from '@/components/admin/InvitationManager';
+import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
+import { ActivityLogs } from '@/components/admin/ActivityLogs';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
@@ -79,8 +81,16 @@ const Admin = () => {
       {/* Main Content */}
       <main className="container py-8">
         <div className="max-w-4xl mx-auto">
-          <Tabs defaultValue="pricing" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+          <Tabs defaultValue="analytics" className="w-full">
+            <TabsList className="grid w-full grid-cols-6 mb-6">
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Activity
+              </TabsTrigger>
               <TabsTrigger value="pricing" className="flex items-center gap-2">
                 <Package className="w-4 h-4" />
                 Pricing
@@ -95,9 +105,41 @@ const Admin = () => {
               </TabsTrigger>
               <TabsTrigger value="invitations" className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Invitations
+                Invites
               </TabsTrigger>
             </TabsList>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">Analytics Overview</h2>
+                  <p className="text-sm text-muted-foreground">
+                    System statistics and metrics
+                  </p>
+                </div>
+              </div>
+              <AnalyticsDashboard />
+            </TabsContent>
+
+            {/* Activity Logs Tab */}
+            <TabsContent value="activity">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">Activity Logs</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Track user actions and events
+                  </p>
+                </div>
+              </div>
+              <ActivityLogs />
+            </TabsContent>
 
             {/* Pricing Tab */}
             <TabsContent value="pricing">
