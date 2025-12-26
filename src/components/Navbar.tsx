@@ -97,9 +97,9 @@ const Navbar = () => {
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
-                  <Link to="/auth" className="cursor-pointer">
+                  <Link to="/account" className="cursor-pointer">
                     <User className="w-4 h-4 mr-2" />
-                    My Account
+                    Account Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -176,7 +176,7 @@ const Navbar = () => {
                   </Link>
                 )}
                 <Link
-                  to="/auth"
+                  to="/account"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={buttonVariants({
                     variant: 'outline',
@@ -185,7 +185,7 @@ const Navbar = () => {
                   })}
                 >
                   <User className="w-4 h-4 mr-2" />
-                  My Account
+                  Account Settings
                 </Link>
                 <Button
                   variant="destructive"
