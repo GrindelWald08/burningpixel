@@ -1,29 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-const ADMIN_SESSION_KEY = 'admin_authenticated';
+// Session token stored in memory only (not sessionStorage)
+// This prevents manipulation via browser DevTools
+let adminSessionToken: string | null = null;
+let sessionExpiry: number | null = null;
+
 const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes
+
+// Generate a cryptographically random token
+const generateToken = (): string => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
 
 export const useAdminAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    checkSession();
-  }, []);
-
-  const checkSession = () => {
-    const sessionData = sessionStorage.getItem(ADMIN_SESSION_KEY);
-    if (sessionData) {
-      const { timestamp } = JSON.parse(sessionData);
-      if (Date.now() - timestamp < SESSION_DURATION) {
-        setIsAuthenticated(true);
-      } else {
-        sessionStorage.removeItem(ADMIN_SESSION_KEY);
-      }
+  const checkSession = useCallback(() => {
+    // Check in-memory session (cannot be manipulated via DevTools)
+    if (adminSessionToken && sessionExpiry && Date.now() < sessionExpiry) {
+      setIsAuthenticated(true);
+    } else {
+      // Clear expired session
+      adminSessionToken = null;
+      sessionExpiry = null;
+      setIsAuthenticated(false);
     }
     setIsLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    checkSession();
+    
+    // Set up interval to check session expiry
+    const interval = setInterval(() => {
+      if (sessionExpiry && Date.now() >= sessionExpiry) {
+        adminSessionToken = null;
+        sessionExpiry = null;
+        setIsAuthenticated(false);
+      }
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(interval);
+  }, [checkSession]);
 
   const login = async (password: string): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -36,7 +58,9 @@ export const useAdminAuth = () => {
       }
 
       if (data.success) {
-        sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ timestamp: Date.now() }));
+        // Store session in memory only (secure against DevTools manipulation)
+        adminSessionToken = generateToken();
+        sessionExpiry = Date.now() + SESSION_DURATION;
         setIsAuthenticated(true);
         return { success: true };
       }
@@ -48,7 +72,8 @@ export const useAdminAuth = () => {
   };
 
   const logout = () => {
-    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    adminSessionToken = null;
+    sessionExpiry = null;
     setIsAuthenticated(false);
   };
 

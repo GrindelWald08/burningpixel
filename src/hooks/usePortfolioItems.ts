@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
+import { portfolioItemSchema, sanitizeUrl } from '@/lib/validation';
 export interface PortfolioItem {
   id: string;
   title: string;
@@ -49,9 +49,22 @@ export const useUpdatePortfolioItem = () => {
 
   return useMutation({
     mutationFn: async (item: Partial<PortfolioItem> & { id: string }) => {
+      // Validate input (partial validation for updates)
+      const validationResult = portfolioItemSchema.partial().safeParse(item);
+      if (!validationResult.success) {
+        throw new Error(validationResult.error.errors[0]?.message || 'Validation failed');
+      }
+      
+      // Sanitize URLs if provided
+      const sanitizedItem = {
+        ...item,
+        ...(item.image_url !== undefined && { image_url: item.image_url ? sanitizeUrl(item.image_url) : null }),
+        ...(item.link_url !== undefined && { link_url: item.link_url ? sanitizeUrl(item.link_url) : null }),
+      };
+      
       const { data, error } = await supabase
         .from('portfolio_items')
-        .update(item)
+        .update(sanitizedItem)
         .eq('id', item.id)
         .select()
         .single();
@@ -71,9 +84,22 @@ export const useCreatePortfolioItem = () => {
 
   return useMutation({
     mutationFn: async (item: Omit<PortfolioItem, 'id' | 'created_at' | 'updated_at'>) => {
+      // Validate input
+      const validationResult = portfolioItemSchema.safeParse(item);
+      if (!validationResult.success) {
+        throw new Error(validationResult.error.errors[0]?.message || 'Validation failed');
+      }
+      
+      // Sanitize URLs
+      const sanitizedItem = {
+        ...item,
+        image_url: item.image_url ? sanitizeUrl(item.image_url) : null,
+        link_url: item.link_url ? sanitizeUrl(item.link_url) : null,
+      };
+      
       const { data, error } = await supabase
         .from('portfolio_items')
-        .insert(item)
+        .insert(sanitizedItem)
         .select()
         .single();
 

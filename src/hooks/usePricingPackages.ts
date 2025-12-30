@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { pricingPackageSchema } from '@/lib/validation';
 
 export interface PricingPackage {
   id: string;
@@ -36,6 +37,12 @@ export const useUpdatePricingPackage = () => {
 
   return useMutation({
     mutationFn: async (pkg: Partial<PricingPackage> & { id: string }) => {
+      // Validate input (partial validation for updates)
+      const validationResult = pricingPackageSchema.partial().safeParse(pkg);
+      if (!validationResult.success) {
+        throw new Error(validationResult.error.errors[0]?.message || 'Validation failed');
+      }
+      
       const { data, error } = await supabase
         .from('pricing_packages')
         .update(pkg)
@@ -57,6 +64,12 @@ export const useCreatePricingPackage = () => {
 
   return useMutation({
     mutationFn: async (pkg: Omit<PricingPackage, 'id' | 'created_at' | 'updated_at'>) => {
+      // Validate input
+      const validationResult = pricingPackageSchema.safeParse(pkg);
+      if (!validationResult.success) {
+        throw new Error(validationResult.error.errors[0]?.message || 'Validation failed');
+      }
+      
       const { data, error } = await supabase
         .from('pricing_packages')
         .insert(pkg)
