@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,7 +16,6 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 const attemptTracker = new Map<string, { count: number; firstAttempt: number; lockedUntil?: number }>();
 
 function getClientIP(req: Request): string {
-  // Try to get real IP from headers (set by proxy/load balancer)
   const forwarded = req.headers.get('x-forwarded-for');
   if (forwarded) {
     return forwarded.split(',')[0].trim();
@@ -35,7 +35,6 @@ function isRateLimited(ip: string): { limited: boolean; retryAfter?: number } {
     return { limited: false };
   }
   
-  // Check if locked out
   if (tracker.lockedUntil && now < tracker.lockedUntil) {
     return { 
       limited: true, 
@@ -43,7 +42,6 @@ function isRateLimited(ip: string): { limited: boolean; retryAfter?: number } {
     };
   }
   
-  // Reset if lockout expired
   if (tracker.lockedUntil && now >= tracker.lockedUntil) {
     attemptTracker.delete(ip);
     return { limited: false };
@@ -61,7 +59,6 @@ function recordFailedAttempt(ip: string): { locked: boolean; attemptsRemaining: 
     return { locked: false, attemptsRemaining: MAX_ATTEMPTS - 1 };
   }
   
-  // Reset count if first attempt was more than lockout duration ago
   if (now - tracker.firstAttempt > LOCKOUT_DURATION_MS) {
     attemptTracker.set(ip, { count: 1, firstAttempt: now });
     return { locked: false, attemptsRemaining: MAX_ATTEMPTS - 1 };
@@ -82,15 +79,35 @@ function clearAttempts(ip: string): void {
   attemptTracker.delete(ip);
 }
 
+async function verifyPassword(inputPassword: string): Promise<boolean> {
+  // Check for bcrypt hash first (more secure)
+  const adminPasswordHash = Deno.env.get('ADMIN_PASSWORD_HASH');
+  if (adminPasswordHash) {
+    try {
+      return await bcrypt.compare(inputPassword, adminPasswordHash);
+    } catch (error) {
+      console.error('Error comparing bcrypt hash:', error);
+      return false;
+    }
+  }
+  
+  // Fallback to plaintext comparison (legacy, less secure)
+  const adminPassword = Deno.env.get('ADMIN_PASSWORD');
+  if (adminPassword) {
+    console.warn('Using plaintext password comparison - consider switching to ADMIN_PASSWORD_HASH with bcrypt');
+    return inputPassword === adminPassword;
+  }
+  
+  return false;
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   const clientIP = getClientIP(req);
   
-  // Check rate limiting before processing
   const rateLimitCheck = isRateLimited(clientIP);
   if (rateLimitCheck.limited) {
     console.log(`Rate limited request from IP: ${clientIP}`);
@@ -112,24 +129,26 @@ serve(async (req) => {
 
   try {
     const { password } = await req.json();
-    const adminPassword = Deno.env.get('ADMIN_PASSWORD');
+    
+    const hasHash = !!Deno.env.get('ADMIN_PASSWORD_HASH');
+    const hasPlaintext = !!Deno.env.get('ADMIN_PASSWORD');
 
-    console.log(`Admin password verification attempt from IP: ${clientIP}`);
+    console.log(`Admin password verification attempt from IP: ${clientIP} (using ${hasHash ? 'bcrypt hash' : hasPlaintext ? 'plaintext' : 'no password configured'})`);
 
-    if (!adminPassword) {
-      console.error('ADMIN_PASSWORD environment variable not set');
+    if (!hasHash && !hasPlaintext) {
+      console.error('Neither ADMIN_PASSWORD_HASH nor ADMIN_PASSWORD environment variable is set');
       return new Response(
         JSON.stringify({ success: false, error: 'Admin password not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (password === adminPassword) {
-      // Clear failed attempts on successful login
+    const isValid = await verifyPassword(password);
+    
+    if (isValid) {
       clearAttempts(clientIP);
       console.log(`Admin password verified successfully from IP: ${clientIP}`);
       
-      // Log successful admin login
       try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -139,7 +158,7 @@ serve(async (req) => {
           action: 'admin_login',
           description: 'Admin password authentication successful',
           ip_address: clientIP,
-          metadata: { auth_method: 'password' }
+          metadata: { auth_method: hasHash ? 'bcrypt_hash' : 'plaintext_password' }
         });
       } catch (logError) {
         console.error('Failed to log admin login:', logError);
@@ -150,11 +169,9 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else {
-      // Record failed attempt
       const attemptResult = recordFailedAttempt(clientIP);
       console.log(`Admin password verification failed from IP: ${clientIP}. Attempts remaining: ${attemptResult.attemptsRemaining}`);
       
-      // Log failed attempt
       try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -167,7 +184,7 @@ serve(async (req) => {
             : 'Admin password authentication failed',
           ip_address: clientIP,
           metadata: { 
-            auth_method: 'password',
+            auth_method: hasHash ? 'bcrypt_hash' : 'plaintext_password',
             attempts_remaining: attemptResult.attemptsRemaining,
             locked: attemptResult.locked
           }
