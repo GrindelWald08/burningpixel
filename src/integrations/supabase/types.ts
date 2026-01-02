@@ -197,6 +197,36 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          created_at: string | null
+          failed_attempts: number | null
+          first_attempt: string | null
+          id: string
+          ip_address: string
+          locked_until: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          failed_attempts?: number | null
+          first_attempt?: string | null
+          id?: string
+          ip_address: string
+          locked_until?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          failed_attempts?: number | null
+          first_attempt?: string | null
+          id?: string
+          ip_address?: string
+          locked_until?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -223,12 +253,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_ip_address: string
+          p_lockout_minutes?: number
+          p_max_attempts?: number
+        }
+        Returns: {
+          attempts_remaining: number
+          is_limited: boolean
+          retry_after_seconds: number
+        }[]
+      }
+      clear_rate_limit: { Args: { p_ip_address: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      record_failed_attempt: {
+        Args: {
+          p_ip_address: string
+          p_lockout_minutes?: number
+          p_max_attempts?: number
+        }
+        Returns: {
+          attempts_remaining: number
+          is_locked: boolean
+        }[]
       }
     }
     Enums: {
