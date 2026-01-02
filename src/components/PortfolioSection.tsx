@@ -1,6 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 import ScrollReveal from './ScrollReveal';
 import { usePortfolioItems } from '@/hooks/usePortfolioItems';
+import { BlurImage } from './ui/blur-image';
 
 const PortfolioSection = () => {
   const { data: projects, isLoading } = usePortfolioItems();
@@ -41,10 +42,11 @@ const PortfolioSection = () => {
                   {/* Image */}
                   <div className="aspect-[4/3] overflow-hidden bg-muted">
                     {project.image_url ? (
-                      <img
+                      <BlurImage
                         src={project.image_url}
                         alt={project.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="transition-transform duration-500 group-hover:scale-110"
+                        containerClassName="w-full h-full"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-muted">
