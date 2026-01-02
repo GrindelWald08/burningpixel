@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { portfolioItemSchema, sanitizeUrl } from '@/lib/validation';
+import { compressImage } from '@/lib/imageCompression';
 export interface PortfolioItem {
   id: string;
   title: string;
@@ -133,12 +134,15 @@ export const useDeletePortfolioItem = () => {
 };
 
 export const uploadPortfolioImage = async (file: File): Promise<string> => {
-  const fileExt = file.name.split('.').pop();
+  // Compress image before uploading (max 1200px, 80% quality)
+  const compressedFile = await compressImage(file, 1200, 1200, 0.8);
+  
+  const fileExt = compressedFile.name.split('.').pop();
   const fileName = `${crypto.randomUUID()}.${fileExt}`;
 
   const { error: uploadError } = await supabase.storage
     .from('portfolio')
-    .upload(fileName, file);
+    .upload(fileName, compressedFile);
 
   if (uploadError) throw uploadError;
 
