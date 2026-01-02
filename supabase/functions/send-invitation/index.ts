@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { z } from "https://deno.land/x/zod@v3.21.4/mod.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -10,10 +11,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface InvitationRequest {
-  email: string;
-  role: string;
-}
+// Validation schema for invitation request
+const InvitationSchema = z.object({
+  email: z.string()
+    .email('Invalid email format')
+    .min(3, 'Email too short')
+    .max(254, 'Email exceeds maximum length')
+    .toLowerCase()
+    .trim(),
+  role: z.enum(['admin', 'moderator', 'user']).optional().default('user')
+});
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -69,14 +76,22 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, role }: InvitationRequest = await req.json();
+    // Parse and validate input
+    const body = await req.json();
+    const validation = InvitationSchema.safeParse(body);
     
-    if (!email) {
+    if (!validation.success) {
+      console.error("Validation failed:", validation.error.errors);
       return new Response(
-        JSON.stringify({ error: "Email is required" }),
+        JSON.stringify({ 
+          error: 'Invalid input',
+          details: validation.error.errors[0]?.message || 'Validation failed'
+        }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    const { email, role } = validation.data;
 
     console.log(`Creating invitation for ${email} with role ${role}`);
 
@@ -115,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
       .insert({
         email,
         invited_by: user.id,
-        role: role || "user",
+        role: role,
       })
       .select()
       .single();
@@ -176,7 +191,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-invitation function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "An unexpected error occurred" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
