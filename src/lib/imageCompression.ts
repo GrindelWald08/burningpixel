@@ -52,21 +52,35 @@ export const compressImage = (
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, width, height);
 
-      // Convert to blob with compression
-      const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-      const outputQuality = file.type === 'image/png' ? undefined : quality;
+      // Convert to WebP for best compression (with JPEG fallback)
+      const outputType = 'image/webp';
 
       canvas.toBlob(
         (blob) => {
           if (!blob) {
-            reject(new Error('Failed to compress image'));
+            // Fallback to JPEG if WebP fails
+            canvas.toBlob(
+              (jpegBlob) => {
+                if (!jpegBlob) {
+                  reject(new Error('Failed to compress image'));
+                  return;
+                }
+                const baseName = file.name.replace(/\.[^/.]+$/, '');
+                const fallbackFile = new File([jpegBlob], `${baseName}.jpg`, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(fallbackFile);
+              },
+              'image/jpeg',
+              quality
+            );
             return;
           }
 
-          // Generate new filename with appropriate extension
-          const extension = outputType === 'image/png' ? 'png' : 'jpg';
+          // Generate new filename with webp extension
           const baseName = file.name.replace(/\.[^/.]+$/, '');
-          const newFileName = `${baseName}.${extension}`;
+          const newFileName = `${baseName}.webp`;
 
           const compressedFile = new File([blob], newFileName, {
             type: outputType,
@@ -76,7 +90,7 @@ export const compressImage = (
           // Only use compressed version if it's smaller
           if (compressedFile.size < file.size) {
             console.log(
-              `Image compressed: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB (${Math.round((1 - compressedFile.size / file.size) * 100)}% reduction)`
+              `Image compressed to WebP: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB (${Math.round((1 - compressedFile.size / file.size) * 100)}% reduction)`
             );
             resolve(compressedFile);
           } else {
@@ -85,7 +99,7 @@ export const compressImage = (
           }
         },
         outputType,
-        outputQuality
+        quality
       );
     };
 
