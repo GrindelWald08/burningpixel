@@ -83,6 +83,71 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          expired_at: string | null
+          id: string
+          package_id: string | null
+          package_name: string
+          paid_at: string | null
+          payment_method: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          xendit_invoice_id: string | null
+          xendit_invoice_url: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          expired_at?: string | null
+          id?: string
+          package_id?: string | null
+          package_name: string
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          xendit_invoice_id?: string | null
+          xendit_invoice_url?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          expired_at?: string | null
+          id?: string
+          package_id?: string | null
+          package_name?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          xendit_invoice_id?: string | null
+          xendit_invoice_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_items: {
         Row: {
           category: string

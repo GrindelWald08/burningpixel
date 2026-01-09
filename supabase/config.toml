@@ -3,5 +3,11 @@ project_id = "uwsjhtfwxdizxqunplcw"
 [functions.verify-admin-password]
 verify_jwt = false
 
+[functions.create-xendit-invoice]
+verify_jwt = false
+
+[functions.xendit-webhook]
+verify_jwt = false
+
 [functions.send-invitation]
 verify_jwt = false
