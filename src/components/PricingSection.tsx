@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Check, Star, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ScrollReveal from './ScrollReveal';
-import { getWhatsAppUrl } from '@/lib/whatsapp';
 import { usePricingPackages } from '@/hooks/usePricingPackages';
+import PaymentModal from './PaymentModal';
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('id-ID').format(price);
@@ -16,13 +16,34 @@ const categories = [
   { key: 'toko-online', label: 'Toko Online', prefix: 'Toko Online' },
 ];
 
+interface SelectedPackage {
+  id: string;
+  name: string;
+  amount: number;
+}
+
 const PricingSection = () => {
   const { data: packages, isLoading } = usePricingPackages();
   const [activeCategory, setActiveCategory] = useState('landing-page');
+  const [selectedPackage, setSelectedPackage] = useState<SelectedPackage | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const filteredPackages = packages?.filter(pkg => 
     pkg.name.toLowerCase().includes(categories.find(c => c.key === activeCategory)?.prefix.toLowerCase() || '')
   ) || [];
+
+  const handleOrderClick = (pkg: { id: string; name: string; price: number; discount_percentage: number }) => {
+    const discountedPrice = pkg.discount_percentage > 0
+      ? pkg.price * (1 - pkg.discount_percentage / 100)
+      : pkg.price;
+    
+    setSelectedPackage({
+      id: pkg.id,
+      name: pkg.name,
+      amount: discountedPrice,
+    });
+    setIsPaymentModalOpen(true);
+  };
 
   return (
     <section id="harga" className="py-24 relative">
@@ -150,14 +171,13 @@ const PricingSection = () => {
                     </ul>
 
                     {/* CTA Button */}
-                    <a href={getWhatsAppUrl(`Halo, saya tertarik dengan paket ${plan.name}. Bisa dibantu?`)} target="_blank" rel="noopener noreferrer" className="mt-auto">
-                      <Button
-                        variant={plan.is_popular ? 'hero' : 'outline'}
-                        className="w-full"
-                      >
-                        Order Sekarang
-                      </Button>
-                    </a>
+                    <Button
+                      variant={plan.is_popular ? 'hero' : 'outline'}
+                      className="w-full mt-auto"
+                      onClick={() => handleOrderClick(plan)}
+                    >
+                      Order Sekarang
+                    </Button>
                   </div>
                 </ScrollReveal>
               );
@@ -169,6 +189,17 @@ const PricingSection = () => {
           </div>
         )}
       </div>
+
+      {/* Payment Modal */}
+      {selectedPackage && (
+        <PaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          packageId={selectedPackage.id}
+          packageName={selectedPackage.name}
+          amount={selectedPackage.amount}
+        />
+      )}
     </section>
   );
 };
