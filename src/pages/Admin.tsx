@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon, Shield, Users, Mail, BarChart3, Activity } from 'lucide-react';
+import { ArrowLeft, Plus, LogOut, Package, RefreshCw, Image as ImageIcon, Shield, Users, Mail, BarChart3, Activity, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminLogin from '@/components/admin/AdminLogin';
@@ -12,6 +12,7 @@ import UserManagement from '@/components/admin/UserManagement';
 import { InvitationManager } from '@/components/admin/InvitationManager';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import { ActivityLogs } from '@/components/admin/ActivityLogs';
+import { OrderManagement } from '@/components/admin/OrderManagement';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
@@ -81,31 +82,35 @@ const Admin = () => {
       {/* Main Content */}
       <main className="container py-8">
         <div className="max-w-4xl mx-auto">
-          <Tabs defaultValue="analytics" className="w-full">
-            <TabsList className="grid w-full grid-cols-6 mb-6">
+        <Tabs defaultValue="analytics" className="w-full">
+            <TabsList className="grid w-full grid-cols-7 mb-6">
               <TabsTrigger value="analytics" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
-                Analytics
+                <span className="hidden sm:inline">Analytics</span>
+              </TabsTrigger>
+              <TabsTrigger value="orders" className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                <span className="hidden sm:inline">Orders</span>
               </TabsTrigger>
               <TabsTrigger value="activity" className="flex items-center gap-2">
                 <Activity className="w-4 h-4" />
-                Activity
+                <span className="hidden sm:inline">Activity</span>
               </TabsTrigger>
               <TabsTrigger value="pricing" className="flex items-center gap-2">
                 <Package className="w-4 h-4" />
-                Pricing
+                <span className="hidden sm:inline">Pricing</span>
               </TabsTrigger>
               <TabsTrigger value="portfolio" className="flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" />
-                Portfolio
+                <span className="hidden sm:inline">Portfolio</span>
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                Users
+                <span className="hidden sm:inline">Users</span>
               </TabsTrigger>
               <TabsTrigger value="invitations" className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Invites
+                <span className="hidden sm:inline">Invites</span>
               </TabsTrigger>
             </TabsList>
 
@@ -123,6 +128,22 @@ const Admin = () => {
                 </div>
               </div>
               <AnalyticsDashboard />
+            </TabsContent>
+
+            {/* Orders Tab */}
+            <TabsContent value="orders">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">Order Management</h2>
+                  <p className="text-sm text-muted-foreground">
+                    View and manage payment orders
+                  </p>
+                </div>
+              </div>
+              <OrderManagement />
             </TabsContent>
 
             {/* Activity Logs Tab */}
