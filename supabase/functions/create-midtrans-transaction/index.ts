@@ -108,8 +108,8 @@ serve(async (req: Request): Promise<Response> => {
       },
     };
 
-    // Use Sandbox URL for testing, change to production URL when live
-    const midtransUrl = "https://app.sandbox.midtrans.com/snap/v1/transactions";
+    // Production URL for live payments
+    const midtransUrl = "https://app.midtrans.com/snap/v1/transactions";
     
     const midtransResponse = await fetch(midtransUrl, {
       method: "POST",
