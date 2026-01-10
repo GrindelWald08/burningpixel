@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, User, Lock, Mail, Shield, Save, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, User, Lock, Mail, Shield, Save, Eye, EyeOff, ShoppingBag } from 'lucide-react';
+import OrderHistory from '@/components/OrderHistory';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logActivity } from '@/hooks/useActivityLogs';
 
@@ -198,10 +199,14 @@ const Account = () => {
         </Card>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Profile
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4" />
+              Orders
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Lock className="w-4 h-4" />
@@ -252,6 +257,11 @@ const Account = () => {
                 </form>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders">
+            <OrderHistory />
           </TabsContent>
 
           {/* Security Tab */}
