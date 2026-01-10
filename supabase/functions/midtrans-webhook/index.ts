@@ -3,8 +3,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-callback-token",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Helper to create SHA512 hash
+async function sha512(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest("SHA-512", msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
 
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -12,19 +20,27 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
+    if (!serverKey) {
+      throw new Error("MIDTRANS_SERVER_KEY is not configured");
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const payload = await req.json();
-    console.log("Xendit webhook received:", JSON.stringify(payload));
+    console.log("Midtrans webhook received:", JSON.stringify(payload));
 
     const { 
-      id: invoiceId,
-      external_id: orderId,
-      status,
-      payment_method,
-      paid_at,
+      order_id: orderId,
+      transaction_status: transactionStatus,
+      fraud_status: fraudStatus,
+      payment_type: paymentType,
+      transaction_time: transactionTime,
+      status_code: statusCode,
+      gross_amount: grossAmount,
+      signature_key: signatureKey,
     } = payload;
 
     if (!orderId) {
@@ -35,31 +51,51 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Map Xendit status to our status
+    // Verify signature
+    const expectedSignature = await sha512(orderId + statusCode + grossAmount + serverKey);
+    if (signatureKey !== expectedSignature) {
+      console.error("Invalid signature");
+      return new Response(
+        JSON.stringify({ error: "Invalid signature" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Map Midtrans status to our status
     let orderStatus: string;
-    switch (status) {
-      case "PAID":
-      case "SETTLED":
+    switch (transactionStatus) {
+      case "capture":
+        // For credit card, check fraud status
+        orderStatus = fraudStatus === "accept" ? "paid" : "pending";
+        break;
+      case "settlement":
         orderStatus = "paid";
         break;
-      case "EXPIRED":
-        orderStatus = "expired";
-        break;
-      case "PENDING":
+      case "pending":
         orderStatus = "pending";
         break;
+      case "deny":
+      case "cancel":
+        orderStatus = "cancelled";
+        break;
+      case "expire":
+        orderStatus = "expired";
+        break;
+      case "refund":
+        orderStatus = "refunded";
+        break;
       default:
-        orderStatus = status.toLowerCase();
+        orderStatus = transactionStatus;
     }
 
     // Update order in database
     const updateData: Record<string, any> = {
       status: orderStatus,
-      payment_method: payment_method || null,
+      payment_method: paymentType || null,
     };
 
-    if (paid_at) {
-      updateData.paid_at = paid_at;
+    if (orderStatus === "paid" && transactionTime) {
+      updateData.paid_at = transactionTime;
     }
 
     const { error: updateError } = await supabase
@@ -83,7 +119,7 @@ serve(async (req: Request): Promise<Response> => {
         .from("orders")
         .select("*")
         .eq("id", orderId)
-        .single();
+        .maybeSingle();
 
       if (order) {
         await supabase.from("activity_logs").insert({
@@ -93,7 +129,7 @@ serve(async (req: Request): Promise<Response> => {
           metadata: {
             order_id: orderId,
             amount: order.amount,
-            payment_method: payment_method,
+            payment_method: paymentType,
           },
         });
       }
@@ -104,7 +140,7 @@ serve(async (req: Request): Promise<Response> => {
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
-    console.error("Error in xendit-webhook:", error);
+    console.error("Error in midtrans-webhook:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }

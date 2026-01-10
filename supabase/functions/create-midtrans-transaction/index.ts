@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface CreateInvoiceRequest {
+interface CreateTransactionRequest {
   packageId: string;
   packageName: string;
   amount: number;
@@ -21,16 +21,16 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const xenditSecretKey = Deno.env.get("XENDIT_SECRET_KEY");
-    if (!xenditSecretKey) {
-      throw new Error("XENDIT_SECRET_KEY is not configured");
+    const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
+    if (!serverKey) {
+      throw new Error("MIDTRANS_SERVER_KEY is not configured");
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { packageId, packageName, amount, customerName, customerEmail, customerPhone }: CreateInvoiceRequest = await req.json();
+    const { packageId, packageName, amount, customerName, customerEmail, customerPhone }: CreateTransactionRequest = await req.json();
 
     // Validate required fields
     if (!packageName || !amount || !customerName || !customerEmail) {
@@ -60,7 +60,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // Create order in database first
-    const externalId = `order_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -82,42 +82,48 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("Failed to create order");
     }
 
-    // Create Xendit invoice
-    const invoicePayload = {
-      external_id: order.id,
-      amount: amount,
-      payer_email: customerEmail,
-      description: `Pembayaran untuk ${packageName}`,
-      invoice_duration: 86400, // 24 hours
-      customer: {
-        given_names: customerName,
-        email: customerEmail,
-        mobile_number: customerPhone || undefined,
+    // Create Midtrans Snap transaction
+    const transactionPayload = {
+      transaction_details: {
+        order_id: order.id,
+        gross_amount: amount,
       },
-      success_redirect_url: `${req.headers.get("origin")}/payment/success?order_id=${order.id}`,
-      failure_redirect_url: `${req.headers.get("origin")}/payment/failed?order_id=${order.id}`,
-      currency: "IDR",
-      items: [
+      customer_details: {
+        first_name: customerName,
+        email: customerEmail,
+        phone: customerPhone || "",
+      },
+      item_details: [
         {
-          name: packageName,
-          quantity: 1,
+          id: packageId || "package",
           price: amount,
+          quantity: 1,
+          name: packageName.substring(0, 50), // Midtrans has 50 char limit
         },
       ],
+      callbacks: {
+        finish: `${req.headers.get("origin")}/payment/success?order_id=${order.id}`,
+        error: `${req.headers.get("origin")}/payment/failed?order_id=${order.id}`,
+        pending: `${req.headers.get("origin")}/payment/success?order_id=${order.id}`,
+      },
     };
 
-    const xenditResponse = await fetch("https://api.xendit.co/v2/invoices", {
+    // Use Sandbox URL for testing, change to production URL when live
+    const midtransUrl = "https://app.sandbox.midtrans.com/snap/v1/transactions";
+    
+    const midtransResponse = await fetch(midtransUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${btoa(xenditSecretKey + ":")}`,
+        "Accept": "application/json",
+        "Authorization": `Basic ${btoa(serverKey + ":")}`,
       },
-      body: JSON.stringify(invoicePayload),
+      body: JSON.stringify(transactionPayload),
     });
 
-    if (!xenditResponse.ok) {
-      const errorData = await xenditResponse.text();
-      console.error("Xendit API error:", errorData);
+    if (!midtransResponse.ok) {
+      const errorData = await midtransResponse.text();
+      console.error("Midtrans API error:", errorData);
       
       // Update order status to failed
       await supabase
@@ -125,18 +131,17 @@ serve(async (req: Request): Promise<Response> => {
         .update({ status: "failed" })
         .eq("id", order.id);
 
-      throw new Error("Failed to create Xendit invoice");
+      throw new Error("Failed to create Midtrans transaction");
     }
 
-    const xenditInvoice = await xenditResponse.json();
+    const midtransResult = await midtransResponse.json();
 
-    // Update order with Xendit invoice details
+    // Update order with Midtrans details (reusing xendit columns for compatibility)
     const { error: updateError } = await supabase
       .from("orders")
       .update({
-        xendit_invoice_id: xenditInvoice.id,
-        xendit_invoice_url: xenditInvoice.invoice_url,
-        expired_at: xenditInvoice.expiry_date,
+        xendit_invoice_id: midtransResult.token,
+        xendit_invoice_url: midtransResult.redirect_url,
       })
       .eq("id", order.id);
 
@@ -147,14 +152,13 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         orderId: order.id,
-        invoiceId: xenditInvoice.id,
-        invoiceUrl: xenditInvoice.invoice_url,
-        expiryDate: xenditInvoice.expiry_date,
+        token: midtransResult.token,
+        redirectUrl: midtransResult.redirect_url,
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
-    console.error("Error in create-xendit-invoice:", error);
+    console.error("Error in create-midtrans-transaction:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }

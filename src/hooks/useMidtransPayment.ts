@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface CreateInvoiceParams {
+interface CreateTransactionParams {
   packageId?: string;
   packageName: string;
   amount: number;
@@ -11,31 +11,30 @@ interface CreateInvoiceParams {
   customerPhone?: string;
 }
 
-interface InvoiceResponse {
+interface TransactionResponse {
   orderId: string;
-  invoiceId: string;
-  invoiceUrl: string;
-  expiryDate: string;
+  token: string;
+  redirectUrl: string;
 }
 
-export const useXenditPayment = () => {
+export const useMidtransPayment = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const createInvoice = async (params: CreateInvoiceParams): Promise<InvoiceResponse | null> => {
+  const createTransaction = async (params: CreateTransactionParams): Promise<TransactionResponse | null> => {
     setIsLoading(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('create-xendit-invoice', {
+      const { data, error } = await supabase.functions.invoke('create-midtrans-transaction', {
         body: params,
       });
 
       if (error) {
-        console.error('Invoice creation error:', error);
-        toast.error('Gagal membuat invoice pembayaran');
+        console.error('Transaction creation error:', error);
+        toast.error('Gagal membuat transaksi pembayaran');
         return null;
       }
 
-      return data as InvoiceResponse;
+      return data as TransactionResponse;
     } catch (error) {
       console.error('Payment error:', error);
       toast.error('Terjadi kesalahan saat memproses pembayaran');
@@ -46,7 +45,7 @@ export const useXenditPayment = () => {
   };
 
   return {
-    createInvoice,
+    createTransaction,
     isLoading,
   };
 };

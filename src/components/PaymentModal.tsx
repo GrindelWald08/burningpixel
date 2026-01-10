@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useXenditPayment } from '@/hooks/useXenditPayment';
+import { useMidtransPayment } from '@/hooks/useMidtransPayment';
 import { Loader2, CreditCard, CheckCircle } from 'lucide-react';
 
 interface PaymentModalProps {
@@ -19,13 +19,13 @@ const formatPrice = (price: number) => {
 };
 
 const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: PaymentModalProps) => {
-  const { createInvoice, isLoading } = useXenditPayment();
+  const { createTransaction, isLoading } = useMidtransPayment();
   const [formData, setFormData] = useState({
     customerName: '',
     customerEmail: '',
     customerPhone: '',
   });
-  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +34,7 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
       return;
     }
 
-    const result = await createInvoice({
+    const result = await createTransaction({
       packageId,
       packageName,
       amount,
@@ -44,13 +44,13 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
     });
 
     if (result) {
-      setInvoiceUrl(result.invoiceUrl);
+      setRedirectUrl(result.redirectUrl);
     }
   };
 
   const handlePayNow = () => {
-    if (invoiceUrl) {
-      window.open(invoiceUrl, '_blank');
+    if (redirectUrl) {
+      window.open(redirectUrl, '_blank');
       onClose();
       resetForm();
     }
@@ -58,7 +58,7 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
 
   const resetForm = () => {
     setFormData({ customerName: '', customerEmail: '', customerPhone: '' });
-    setInvoiceUrl(null);
+    setRedirectUrl(null);
   };
 
   const handleClose = () => {
@@ -79,7 +79,7 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
           </DialogDescription>
         </DialogHeader>
 
-        {!invoiceUrl ? (
+        {!redirectUrl ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="customerName">Nama Lengkap *</Label>
@@ -139,7 +139,7 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
               <CheckCircle className="w-8 h-8 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg">Invoice Berhasil Dibuat</h3>
+              <h3 className="font-semibold text-lg">Transaksi Berhasil Dibuat</h3>
               <p className="text-muted-foreground text-sm mt-1">
                 Klik tombol di bawah untuk melanjutkan pembayaran
               </p>
@@ -148,7 +148,7 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
               Bayar Sekarang
             </Button>
             <p className="text-xs text-muted-foreground">
-              Anda akan diarahkan ke halaman pembayaran Xendit
+              Anda akan diarahkan ke halaman pembayaran Midtrans
             </p>
           </div>
         )}
