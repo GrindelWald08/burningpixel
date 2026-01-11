@@ -4,9 +4,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Package, Clock, CheckCircle, XCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertCircle, ExternalLink, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 interface Order {
   id: string;
@@ -109,9 +110,10 @@ const OrderHistory = () => {
           const status = statusConfig[order.status] || statusConfig.pending;
           
           return (
-            <div 
+            <Link 
               key={order.id} 
-              className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+              to={`/order/${order.id}`}
+              className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-4 flex-1">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -145,22 +147,20 @@ const OrderHistory = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      asChild
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.open(order.xendit_invoice_url!, '_blank');
+                      }}
                     >
-                      <a 
-                        href={order.xendit_invoice_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        Pay
-                      </a>
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Bayar
                     </Button>
                   )}
+                  
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </div>
               </div>
-            </div>
+            </Link>
           );
         })}
       </CardContent>
