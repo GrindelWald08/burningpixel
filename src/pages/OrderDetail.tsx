@@ -21,11 +21,13 @@ import {
   Phone,
   CreditCard,
   Calendar,
-  Hash
+  Hash,
+  Download
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
+import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 
 interface Order {
   id: string;
@@ -158,10 +160,21 @@ const OrderDetail = () => {
                   Dibuat pada {format(new Date(order.created_at), 'dd MMMM yyyy, HH:mm')}
                 </CardDescription>
               </div>
-              <Badge variant={status.variant} className="flex items-center gap-1.5 w-fit text-sm py-1.5 px-3">
-                {status.icon}
-                {status.label}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => generateInvoicePDF(order)}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Invoice
+                </Button>
+                <Badge variant={status.variant} className="flex items-center gap-1.5 w-fit text-sm py-1.5 px-3">
+                  {status.icon}
+                  {status.label}
+                </Badge>
+              </div>
             </div>
           </CardHeader>
 
