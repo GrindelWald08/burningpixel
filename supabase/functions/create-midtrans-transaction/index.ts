@@ -27,13 +27,45 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // SECURITY: Require authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required. Please log in to make a purchase." }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create client with user's auth token to validate authentication
+    const supabaseWithAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Validate the JWT and get user claims
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseWithAuth.auth.getClaims(token);
+
+    if (claimsError || !claimsData?.claims) {
+      console.error("Authentication error:", claimsError);
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication. Please log in again." }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const userId = claimsData.claims.sub as string;
+    const userEmail = claimsData.claims.email as string;
+
+    // Create service role client for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { packageId, packageName, amount, customerName, customerEmail, customerPhone }: CreateTransactionRequest = await req.json();
 
-    // Validate required fields
-    if (!packageName || !amount || !customerName || !customerEmail) {
+    // SECURITY: Validate required fields including packageId
+    if (!packageId || !packageName || !amount || !customerName || !customerEmail) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -49,26 +81,63 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get user ID from auth header if available
-    const authHeader = req.headers.get("Authorization");
-    let userId: string | null = null;
-    
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: { user } } = await supabase.auth.getUser(token);
-      userId = user?.id || null;
+    // SECURITY: Server-side price validation - fetch package from database
+    const { data: pkg, error: pkgError } = await supabase
+      .from("pricing_packages")
+      .select("id, name, price, discount_percentage")
+      .eq("id", packageId)
+      .single();
+
+    if (pkgError || !pkg) {
+      console.error("Package lookup error:", pkgError);
+      return new Response(
+        JSON.stringify({ error: "Invalid package selected" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    // Create order in database first
-    const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    
+    // Calculate expected price with discount
+    const expectedPrice = pkg.discount_percentage && pkg.discount_percentage > 0
+      ? Number(pkg.price) * (1 - Number(pkg.discount_percentage) / 100)
+      : Number(pkg.price);
+
+    // SECURITY: Validate that the amount matches the expected price (allow 1 IDR tolerance for rounding)
+    if (Math.abs(Number(amount) - expectedPrice) > 1) {
+      console.error(`Price mismatch detected: expected ${expectedPrice}, received ${amount}`);
+      
+      // Log suspicious activity
+      await supabase.from("activity_logs").insert({
+        action: "payment_amount_mismatch",
+        description: `Price manipulation attempt detected for package ${pkg.name}`,
+        user_id: userId,
+        user_email: userEmail,
+        metadata: {
+          package_id: packageId,
+          package_name: pkg.name,
+          expected_amount: expectedPrice,
+          provided_amount: amount,
+        },
+      });
+
+      return new Response(
+        JSON.stringify({ 
+          error: "Amount does not match package price. Please refresh and try again.",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Use the server-validated price for the transaction
+    const validatedAmount = Math.round(expectedPrice);
+
+    // Create order in database with authenticated user ID
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
         user_id: userId,
-        package_id: packageId || null,
-        package_name: packageName,
-        amount: amount,
+        package_id: packageId,
+        package_name: pkg.name,
+        amount: validatedAmount,
         customer_name: customerName,
         customer_email: customerEmail,
         customer_phone: customerPhone || null,
@@ -82,11 +151,11 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("Failed to create order");
     }
 
-    // Create Midtrans Snap transaction
+    // Create Midtrans Snap transaction with server-validated amount
     const transactionPayload = {
       transaction_details: {
         order_id: order.id,
-        gross_amount: amount,
+        gross_amount: validatedAmount,
       },
       customer_details: {
         first_name: customerName,
@@ -95,10 +164,10 @@ serve(async (req: Request): Promise<Response> => {
       },
       item_details: [
         {
-          id: packageId || "package",
-          price: amount,
+          id: packageId,
+          price: validatedAmount,
           quantity: 1,
-          name: packageName.substring(0, 50), // Midtrans has 50 char limit
+          name: pkg.name.substring(0, 50), // Midtrans has 50 char limit
         },
       ],
       callbacks: {
@@ -136,7 +205,7 @@ serve(async (req: Request): Promise<Response> => {
 
     const midtransResult = await midtransResponse.json();
 
-    // Update order with Midtrans details (reusing xendit columns for compatibility)
+    // Update order with Midtrans details
     const { error: updateError } = await supabase
       .from("orders")
       .update({

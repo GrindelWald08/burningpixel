@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMidtransPayment } from '@/hooks/useMidtransPayment';
-import { Loader2, CreditCard, CheckCircle } from 'lucide-react';
+import { Loader2, CreditCard, CheckCircle, LogIn } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -20,12 +22,26 @@ const formatPrice = (price: number) => {
 
 const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: PaymentModalProps) => {
   const { createTransaction, isLoading } = useMidtransPayment();
+  const { user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     customerName: '',
     customerEmail: '',
     customerPhone: '',
   });
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+
+  // Pre-fill form with user data when authenticated
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        customerEmail: user.email || '',
+        customerName: user.user_metadata?.full_name || prev.customerName,
+      }));
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +73,11 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
   };
 
   const resetForm = () => {
-    setFormData({ customerName: '', customerEmail: '', customerPhone: '' });
+    setFormData({ 
+      customerName: user?.user_metadata?.full_name || '', 
+      customerEmail: user?.email || '', 
+      customerPhone: '' 
+    });
     setRedirectUrl(null);
   };
 
@@ -65,6 +85,56 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
     onClose();
     resetForm();
   };
+
+  const handleLoginRedirect = () => {
+    onClose();
+    navigate('/auth', { state: { returnTo: '/#harga' } });
+  };
+
+  // Show login prompt if not authenticated
+  if (!authLoading && !user) {
+    return (
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LogIn className="w-5 h-5 text-primary" />
+              Login Diperlukan
+            </DialogTitle>
+            <DialogDescription>
+              Silakan login untuk melanjutkan pembelian paket {packageName}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 text-center py-4">
+            <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+              <LogIn className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Anda perlu login</h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                Untuk keamanan transaksi, silakan login atau buat akun terlebih dahulu.
+              </p>
+            </div>
+            <div className="pt-4 border-t space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Paket</span>
+                <span className="font-medium">{packageName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Harga</span>
+                <span className="text-xl font-bold text-primary">Rp {formatPrice(amount)}</span>
+              </div>
+            </div>
+            <Button onClick={handleLoginRedirect} className="w-full" variant="hero">
+              <LogIn className="w-4 h-4 mr-2" />
+              Login / Daftar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -79,7 +149,11 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
           </DialogDescription>
         </DialogHeader>
 
-        {!redirectUrl ? (
+        {authLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : !redirectUrl ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="customerName">Nama Lengkap *</Label>
@@ -101,7 +175,13 @@ const PaymentModal = ({ isOpen, onClose, packageId, packageName, amount }: Payme
                 value={formData.customerEmail}
                 onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
                 required
+                disabled={!!user?.email}
               />
+              {user?.email && (
+                <p className="text-xs text-muted-foreground">
+                  Email terkait dengan akun Anda
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
