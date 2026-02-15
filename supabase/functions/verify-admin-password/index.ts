@@ -153,7 +153,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Incorrect password. ${attemptsRemaining} attempts remaining.` 
+          error: 'Incorrect password. Too many failed attempts will result in temporary lockout.' 
         }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
