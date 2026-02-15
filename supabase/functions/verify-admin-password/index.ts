@@ -88,7 +88,7 @@ serve(async (req) => {
     if (!hasHash && !hasPlaintext) {
       console.error('Admin password not configured');
       return new Response(
-        JSON.stringify({ success: false, error: 'Admin password not configured' }),
+        JSON.stringify({ success: false, error: 'Authentication service is temporarily unavailable.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

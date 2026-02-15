@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Json } from '@/integrations/supabase/types';
 
 interface ActivityLog {
   id: string;
@@ -38,13 +37,11 @@ export async function logActivity(
   description?: string,
   metadata?: Record<string, unknown>
 ) {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  await supabase.from('activity_logs').insert([{
-    user_id: user?.id || null,
-    user_email: user?.email || null,
-    action,
-    description,
-    metadata: (metadata || {}) as Json,
-  }]);
+  try {
+    await supabase.functions.invoke('log-activity', {
+      body: { action, description, metadata },
+    });
+  } catch (error) {
+    console.error('Failed to log activity:', error);
+  }
 }

@@ -142,7 +142,7 @@ serve(async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in midtrans-webhook:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "An error occurred processing the webhook." }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
