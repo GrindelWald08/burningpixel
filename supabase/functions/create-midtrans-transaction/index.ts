@@ -226,7 +226,7 @@ serve(async (req: Request): Promise<Response> => {
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in create-midtrans-transaction:", error);
     return new Response(
       JSON.stringify({ error: "An error occurred while processing your payment. Please try again." }),

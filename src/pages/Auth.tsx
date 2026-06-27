@@ -73,10 +73,10 @@ const Auth = () => {
       });
       setExistingSessionEmail(null);
       setMode('login');
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Sign out failed',
-        description: error?.message ?? 'Please try again',
+        description: error instanceof Error ? error.message : 'Please try again',
         variant: 'destructive',
       });
     } finally {

@@ -84,10 +84,10 @@ const Account = () => {
         description: 'Your profile has been updated successfully.',
       });
       queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Update failed',
-        description: error.message || 'Failed to update profile',
+        description: error instanceof Error ? error.message : 'Failed to update profile',
         variant: 'destructive',
       });
     } finally {
@@ -133,10 +133,10 @@ const Account = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Password change failed',
-        description: error.message || 'Failed to change password',
+        description: error instanceof Error ? error.message : 'Failed to change password',
         variant: 'destructive',
       });
     } finally {

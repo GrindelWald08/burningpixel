@@ -64,7 +64,7 @@ serve(async (req: Request): Promise<Response> => {
       JSON.stringify({ success: true }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in log-activity:", error);
     return new Response(
       JSON.stringify({ error: "An error occurred" }),

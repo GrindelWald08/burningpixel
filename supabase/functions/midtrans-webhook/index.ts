@@ -89,7 +89,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // Update order in database
-    const updateData: Record<string, any> = {
+    const updateData: { status: string; payment_method: string | null; paid_at?: string } = {
       status: orderStatus,
       payment_method: paymentType || null,
     };
@@ -139,7 +139,7 @@ serve(async (req: Request): Promise<Response> => {
       JSON.stringify({ success: true }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in midtrans-webhook:", error);
     return new Response(
       JSON.stringify({ error: "An error occurred processing the webhook." }),

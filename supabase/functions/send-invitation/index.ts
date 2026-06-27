@@ -188,7 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in send-invitation function:", error);
     return new Response(
       JSON.stringify({ error: "An unexpected error occurred" }),
